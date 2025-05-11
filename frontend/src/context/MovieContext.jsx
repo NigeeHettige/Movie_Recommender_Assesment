@@ -4,14 +4,12 @@ import PropTypes from "prop-types";
 
 
 
+
+const MoviesContext = createContext();
 MoviesContext.propTypes = {
   children: PropTypes.node.isRequired,
 };
-MoviesProvider.propTypes = {
-  children: PropTypes.node.isRequired,
-};
 
-const MoviesContext = createContext();
 
 export const MoviesProvider = ({ children }) => {
   const [movies, setMovies] = useState([]);
@@ -22,7 +20,9 @@ export const MoviesProvider = ({ children }) => {
     </MoviesContext.Provider>
   );
 };
-
+MoviesProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 export const useMovies = () => {
   const context = useContext(MoviesContext);
   if (!context) {

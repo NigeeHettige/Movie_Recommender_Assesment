@@ -4,15 +4,13 @@ import { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 import PropTypes from "prop-types";
 
+
+
+const AuthContext = createContext();
 AuthContext.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
-AuthProvider.propTypes = {
-  children: PropTypes.node.isRequired,
-};
-
-const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -149,7 +147,9 @@ export function AuthProvider({ children }) {
     </AuthContext.Provider>
   );
 }
-
+AuthProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

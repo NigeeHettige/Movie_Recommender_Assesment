@@ -3,15 +3,13 @@ import React from "react";
 import PropTypes from "prop-types";
 
 
+
+const GenresContext = createContext();
+
 GenresContext.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
-GenresProvider.propTypes = {
-  children: PropTypes.node.isRequired,
-};
-
-const GenresContext = createContext();
 
 export const GenresProvider = ({ children }) => {
   const [generes, setGeneres] = useState([]);
@@ -22,7 +20,9 @@ export const GenresProvider = ({ children }) => {
     </GenresContext.Provider>
   );
 };
-
+GenresProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 export const useGenres = () => {
   const context = useContext(GenresContext);
   if (!context) {

@@ -5,15 +5,13 @@ import PropTypes from "prop-types";
 
 
 
+export const FilterContext = createContext();
+
 FilterContext.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
-FilterProvider.propTypes = {
-  children: PropTypes.node.isRequired,
-};
 
-export const FilterContext = createContext();
 
 export const FilterProvider = ({ children }) => {
   const { movies } = useMovies() || {};
@@ -22,6 +20,9 @@ export const FilterProvider = ({ children }) => {
   const [selectedGenre, setSelectedGenre] = useState(null);
   const [selectedYear, setSelectedYear] = useState(null);
   const [selectedRating, setSelectedRating] = useState("");
+FilterProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 
   const filterMovies = () => {
     if (!movies || !Array.isArray(movies) || movies.length === 0) return [];

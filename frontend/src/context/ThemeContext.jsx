@@ -4,13 +4,11 @@ import PropTypes from "prop-types";
 
 
 
+
+const ThemeContext = createContext();
 ThemeContext.propTypes = {
   children: PropTypes.node.isRequired,
 };
-ThemeContextProvider.propTypes = {
-  children: PropTypes.node.isRequired,
-};
-const ThemeContext = createContext();
 
 export function ThemeContextProvider({ children }) {
   const [theme, setTheme] = useState("dark");
@@ -20,7 +18,9 @@ export function ThemeContextProvider({ children }) {
     </ThemeContext.Provider>
   );
 }
-
+ThemeContextProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (context === undefined) {
