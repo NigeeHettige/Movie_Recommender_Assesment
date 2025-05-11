@@ -1,13 +1,13 @@
 import axios from "axios";
 
-//Base url
+// Base url
 const api = axios.create({
   baseURL: "https://api.themoviedb.org/3/",
 });
 
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
-//Get all movies
+// Get all movies
 export const discoverMovies = async (
   page = 1,
   language = "en-US",
@@ -30,7 +30,7 @@ export const discoverMovies = async (
   }
 };
 
-//Get the trending movies
+// Get the trending movies
 export const discoverPopularMovies = async (
   page = 1,
   language = "en-US",
@@ -54,7 +54,7 @@ export const discoverPopularMovies = async (
   }
 };
 
-//Get the video link of movies
+// Get the video link of movies
 export const getMovieVideos = async (movieId) => {
   try {
     const response = await api.get(`movie/${movieId}/videos`, {
@@ -67,15 +67,14 @@ export const getMovieVideos = async (movieId) => {
   }
 };
 
-
-//Get the Genres of the movies
-export const fetchMovieGenres = async (language = "en-US",sessionId=null) => {
+// Get the Genres of the movies
+export const fetchMovieGenres = async (language = "en-US", sessionId = null) => {
   try {
     const response = await api.get("genre/movie/list", {
       params: {
         api_key: API_KEY,
         language,
-         ...(sessionId && { session_id: sessionId }),
+        ...(sessionId && { session_id: sessionId }),
       },
     });
   
@@ -85,4 +84,5 @@ export const fetchMovieGenres = async (language = "en-US",sessionId=null) => {
     throw error;
   }
 };
+
 export default api;

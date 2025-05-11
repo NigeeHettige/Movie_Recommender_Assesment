@@ -1,135 +1,72 @@
-// context/AuthContext.jsx
-import React from "react";
 import { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios";
-import PropTypes from "prop-types";
+import axios from 'axios';
 
-
+// Create an Axios instance for TMDB API
+const tmdbClient = axios.create({
+  baseURL: 'https://api.themoviedb.org/3',
+  params: {
+    api_key: import.meta.env.VITE_TMDB_API_KEY,
+  },
+});
 
 const AuthContext = createContext();
-AuthContext.propTypes = {
-  children: PropTypes.node.isRequired,
-};
 
-
-export function AuthProvider({ children }) {
+export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     const storedAuth = localStorage.getItem("isAuthenticated");
     return storedAuth ? JSON.parse(storedAuth) : false;
   });
-  useEffect(() => {
-    localStorage.setItem("isAuthenticated", JSON.stringify(isAuthenticated));
-  }, [isAuthenticated]);
-
-  const [sessionId, setSessionId] = useState(null);
+  const [sessionId, setSessionId] = useState(() => {
+    return localStorage.getItem("sessionId") || null;
+  });
   const [error, setError] = useState(null);
 
-  // Access API key from .env
-  const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
-
-  // Validate that the API key is present
-  if (!API_KEY) {
-    console.error(
-      "TMDB API key is missing. Please set REACT_APP_TMDB_API_KEY in the .env file."
-    );
-    throw new Error(
-      "TMDB API key is missing. Please set REACT_APP_TMDB_API_KEY in the .env file."
-    );
-  }
-
-  // Configure Axios instance
-  const api = axios.create({
-    baseURL: "/",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  // Automatically add API key to all requests
-  api.interceptors.request.use((config) => {
-    config.params = config.params || {};
-    config.params.api_key = API_KEY;
-    return config;
-  });
-
-  // Step 1: Create a Request Token
-  const createRequestToken = async () => {
-    try {
-      const response = await api.get("/authentication/token/new");
-      if (response.data.success) {
-        return response.data.request_token;
-      } else {
-        throw new Error(
-          response.data.status_message || "Failed to create request token"
-        );
-      }
-    } catch (err) {
-      setError(err.message || "Network error");
-      return null;
+  useEffect(() => {
+    localStorage.setItem("isAuthenticated", JSON.stringify(isAuthenticated));
+    if (sessionId) {
+      localStorage.setItem("sessionId", sessionId);
+    } else {
+      localStorage.removeItem("sessionId");
     }
-  };
+  }, [isAuthenticated, sessionId]);
 
-  // Step 2: Validate Request Token with Login
-  const validateWithLogin = async (username, password, requestToken) => {
+  const login = async (username, password) => {
     try {
-      const response = await api.post(
-        "/authentication/token/validate_with_login",
-        {
-          username,
-          password,
-          request_token: requestToken,
-        }
-      );
-      if (response.data.success) {
-        return response.data.request_token;
-      } else {
-        throw new Error(
-          response.data.status_message || "Invalid username or password"
-        );
+      // Step 1: Fetch a request token
+      const tokenResponse = await tmdbClient.get('/authentication/token/new');
+      if (!tokenResponse.data.success) {
+        throw new Error("Failed to fetch request token");
       }
-    } catch (err) {
-      setError(err.message || "Authentication failed");
-      return null;
-    }
-  };
+      const requestToken = tokenResponse.data.request_token;
 
-  // Step 3: Create Session ID
-  const createSession = async (requestToken) => {
-    try {
-      const response = await api.post("/authentication/session/new", {
+      // Step 2: Validate the request token with username and password
+      const validateResponse = await tmdbClient.post('/authentication/token/validate_with_login', {
+        username,
+        password,
         request_token: requestToken,
       });
-      if (response.data.success) {
-        setSessionId(response.data.session_id);
-        setIsAuthenticated(true);
-        return response.data.session_id;
-      } else {
-        throw new Error(
-          response.data.status_message || "Failed to create session"
-        );
+      if (!validateResponse.data.success) {
+        throw new Error(validateResponse.data.status_message || "Invalid username or password");
       }
+
+      // Step 3: Create a session with the validated request token
+      const sessionResponse = await tmdbClient.post('/authentication/session/new', {
+        request_token: requestToken,
+      });
+      if (!sessionResponse.data.success) {
+        throw new Error(sessionResponse.data.status_message || "Failed to create session");
+      }
+
+      setSessionId(sessionResponse.data.session_id);
+      setIsAuthenticated(true);
+      setError(null);
+      return true;
     } catch (err) {
-      setError(err.message || "Session creation failed");
-      return null;
+      setError(err.message || "Login failed. Please try again.");
+      setIsAuthenticated(false);
+      setSessionId(null);
+      return false;
     }
-  };
-
-  // Login function
-  const login = async (username, password) => {
-    console.log("Came", username, password);
-    setError(null);
-    const requestToken = await createRequestToken();
-    if (!requestToken) return false;
-
-    const validatedToken = await validateWithLogin(
-      username,
-      password,
-      requestToken
-    );
-    if (!validatedToken) return false;
-
-    const session = await createSession(validatedToken);
-    return !!session;
   };
 
   const logout = () => {
@@ -137,22 +74,27 @@ export function AuthProvider({ children }) {
     setSessionId(null);
     setError(null);
     localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("sessionId");
   };
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, login, logout, error, sessionId }}
+      value={{
+        isAuthenticated,
+        sessionId,
+        login,
+        logout,
+        error,
+      }}
     >
       {children}
     </AuthContext.Provider>
   );
-}
-AuthProvider.propTypes = {
-  children: PropTypes.node.isRequired,
 };
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
