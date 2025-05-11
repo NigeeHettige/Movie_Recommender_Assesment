@@ -1,12 +1,11 @@
 # Movie Explorer 🎬
 
-[![Netlify Status](https://movieexplorerassesment.netlify.app)
 
 A responsive web app for discovering movies using the TMDB API, featuring authentication, search, filtering, and dark mode.
 
 🔗 **Live Demo**: [movieexplorerassesment.netlify.app](https://movieexplorerassesment.netlify.app)
 
-![Movie Explorer Screenshot](screenshot/movieexplorer.png)
+![Movie Explorer Screenshot](./screenshot/screenshot.png)
 
 ## Features ✨
 
